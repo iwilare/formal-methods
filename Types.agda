@@ -1,12 +1,12 @@
 open import Data.Nat     using (ℕ) renaming (_+_ to _+ᵢ_; _≤?_ to _≤?ᵢ_)
 open import Agda.Builtin.Float renaming (primFloatPlus to _+ᵣ_; primFloatLess to _≤?ᵣ_)
 open import Data.Bool    using (Bool; true; false; not; _∧_)
-open import Data.Empty   using (⊥-elim)
 open import Data.Sum     using (inj₁; inj₂; _⊎_)
 open import Data.Product using (_×_; _,_; -,_; _-,-_; ∃; ∃-syntax; proj₂)
 open import Data.String  using (String; _≟_)
 open import Relation.Nullary           using (¬_; yes; no)
 open import Relation.Nullary.Decidable using (⌊_⌋)
+open import Relation.Nullary.Negation  using (contradiction)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 
 vname = String
@@ -273,7 +273,7 @@ progress : ∀ {Γ c s}
   → Γ ⊢ₛ s
   → ¬ c ≡ SKIP
   → ∃[ c′ ] (∃[ s′ ] ( ⦅ c , s ⦆→⦅ c′ , s′ ⦆ ))
-progress TSkip b c = ⊥-elim (c refl)
+progress TSkip b c = contradiction refl c
 progress {s = s} (TLoc x) b _ = SKIP , -, Loc (proj₂ (progress-aval x b))
 progress {s = s} (TSeq {_}{c₁}{c₂} a a₁) b _ with either-skip c₁
 ... | inj₁  skip rewrite skip = c₂ , s , Comp₁

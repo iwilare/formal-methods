@@ -1,8 +1,8 @@
 open import Data.Nat    using (ℕ; _+_; _≤?_)
 open import Data.Bool   using (Bool; true; false; not; _∧_)
-open import Data.Empty  using (⊥-elim)
 open import Data.String using (String; _≟_)
 open import Relation.Nullary using (¬_; yes; no)
+open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function.Equivalence using (_⇔_; equivalence)
 
@@ -44,12 +44,12 @@ deterministic Skip Skip = refl
 deterministic Loc Loc = refl
 deterministic (Comp r₁ r₂)  (Comp r₁′ r₂′) rewrite deterministic r₁ r₁′ = deterministic r₂ r₂′
 deterministic (IfTrue v r)  (IfTrue  v′ r′) = deterministic r r′
-deterministic (IfTrue v r)  (IfFalse v′ r′) rewrite v  = ⊥-elim (true≢false v′)
-deterministic (IfFalse v r) (IfTrue  v′ r′) rewrite v′ = ⊥-elim (true≢false v)
+deterministic (IfTrue v r)  (IfFalse v′ r′) rewrite v  = contradiction v′ true≢false
+deterministic (IfFalse v r) (IfTrue  v′ r′) rewrite v′ = contradiction v true≢false
 deterministic (IfFalse v r) (IfFalse v′ r′) = deterministic r r′
 deterministic (WhileFalse v) (WhileFalse x₁) = refl
-deterministic (WhileFalse v) (WhileTrue x₁ r₁ r₂) rewrite x₁ = ⊥-elim (true≢false v)
-deterministic (WhileTrue v r₁ r₂) (WhileFalse x₁) rewrite v  = ⊥-elim (true≢false x₁)
+deterministic (WhileFalse v) (WhileTrue x₁ r₁ r₂) rewrite x₁ = contradiction v  true≢false
+deterministic (WhileTrue v r₁ r₂) (WhileFalse v′) rewrite v  = contradiction v′ true≢false
 deterministic (WhileTrue v r₁ r₂) (WhileTrue v′ r₁′ r₂′) rewrite deterministic r₁ r₁′ = deterministic r₂ r₂′
 
 lemma2-3-5 : ∀{s t}
