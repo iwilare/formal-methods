@@ -50,41 +50,41 @@ _[_::=_] : state → vname → val → state
 ... | no  _ = s Y
 
 data _⊢ₐ_∷_ : tyenv → aexp → ty → Set where
-  taexpI : ∀ {Γ i} → Γ ⊢ₐ Ic i ∷ Ity
-  taexpR : ∀ {Γ r} → Γ ⊢ₐ Rc r ∷ Rty
-  taexpV : ∀ {Γ x} → Γ ⊢ₐ V x ∷ Γ x
-  taexpP : ∀ {Γ a₁ a₂ τ}
+  taexpI : ∀{Γ i} → Γ ⊢ₐ Ic i ∷ Ity
+  taexpR : ∀{Γ r} → Γ ⊢ₐ Rc r ∷ Rty
+  taexpV : ∀{Γ x} → Γ ⊢ₐ V x ∷ Γ x
+  taexpP : ∀{Γ a₁ a₂ τ}
       → Γ ⊢ₐ a₁ ∷ τ
       → Γ ⊢ₐ a₂ ∷ τ
       → Γ ⊢ₐ Plus a₁ a₂ ∷ τ
 
 data _⊢₆_ : tyenv → bexp → Set where
-  tbexpC : ∀ {Γ v} → Γ ⊢₆ Bc v
-  tbexpN : ∀ {Γ b} → Γ ⊢₆ b
+  tbexpC : ∀{Γ v} → Γ ⊢₆ Bc v
+  tbexpN : ∀{Γ b} → Γ ⊢₆ b
                    → Γ ⊢₆ Not b
-  tbexpA : ∀ {Γ b₁ b₂}
+  tbexpA : ∀{Γ b₁ b₂}
       → Γ ⊢₆ b₁
       → Γ ⊢₆ b₂
       → Γ ⊢₆ And b₁ b₂
-  tbexpL : ∀ {Γ a₁ a₂ τ}
+  tbexpL : ∀{Γ a₁ a₂ τ}
       → Γ ⊢ₐ a₁ ∷ τ
       → Γ ⊢ₐ a₂ ∷ τ
       → Γ ⊢₆ Less a₁ a₂
 
 data _⊢_ : tyenv → com → Set where
-  TSkip : ∀ {Γ} → Γ ⊢ SKIP
-  TLoc : ∀ {Γ a x} → Γ ⊢ₐ a ∷ Γ x
+  TSkip : ∀{Γ} → Γ ⊢ SKIP
+  TLoc : ∀{Γ a x} → Γ ⊢ₐ a ∷ Γ x
                  → Γ ⊢ (x ::= a)
-  TSeq : ∀ {Γ c₁ c₂}
+  TSeq : ∀{Γ c₁ c₂}
        → Γ ⊢ c₁
        → Γ ⊢ c₂
        → Γ ⊢ (c₁ :: c₂)
-  TIf : ∀ {Γ b c₁ c₂}
+  TIf : ∀{Γ b c₁ c₂}
       → Γ ⊢₆ b
       → Γ ⊢ c₁
       → Γ ⊢ c₂
       → Γ ⊢ (IF b THEN c₁ ELSE c₂)
-  TWhile : ∀ {Γ b c}
+  TWhile : ∀{Γ b c}
          → Γ ⊢₆ b
          → Γ ⊢ c
          → Γ ⊢ (WHILE b DO c)
@@ -95,40 +95,40 @@ type (Iv i) = Ity
 type (Rv r) = Rty
 
 _⊢ₛ_ : tyenv → state → Set
-Γ ⊢ₛ s = (∀ (x) → type (s x) ≡ Γ x)
+Γ ⊢ₛ s = ∀ x → type (s x) ≡ Γ x
 
 
 data taval : aexp → state → val → Set where
-  tavalI : ∀ {i s}
+  tavalI : ∀{i s}
          → taval (Ic i) s (Iv i)
-  tavalR : ∀ {r s}
+  tavalR : ∀{r s}
          → taval (Rc r) s (Rv r)
-  tavalV : ∀ {x s}
+  tavalV : ∀{x s}
          → taval (V x) s (s x)
-  tavalSI : ∀ {s a₁ a₂ i₁ i₂}
+  tavalSI : ∀{s a₁ a₂ i₁ i₂}
           → taval a₁ s (Iv i₁)
           → taval a₂ s (Iv i₂)
           → taval (Plus a₁ a₂) s (Iv (i₁ +ᵢ i₂))
-  tavalSR : ∀ {s a₁ a₂ r₁ r₂}
+  tavalSR : ∀{s a₁ a₂ r₁ r₂}
           → taval a₁ s (Rv r₁)
           → taval a₂ s (Rv r₂)
           → taval (Plus a₁ a₂) s (Rv (r₁ +ᵣ r₂))
 
 data tbval : bexp → state → bool → Set where
-  tbvalC : ∀ {s v}
+  tbvalC : ∀{s v}
          → tbval (Bc v) s v
-  tbvalN : ∀ {s b bv}
+  tbvalN : ∀{s b bv}
          → tbval b s bv
          → tbval (Not b) s (not bv)
-  tbvalA : ∀ {s b₁ b₂ bv₁ bv₂}
+  tbvalA : ∀{s b₁ b₂ bv₁ bv₂}
          → tbval b₁ s bv₁
          → tbval b₂ s bv₂
          → tbval (And b₁ b₂) s (bv₁ ∧ bv₂)
-  tbvalLI : ∀ {s a₁ a₂ i₁ i₂}
+  tbvalLI : ∀{s a₁ a₂ i₁ i₂}
          → taval a₁ s (Iv i₁)
          → taval a₂ s (Iv i₂)
          → tbval (Less a₁ a₂) s (⌊ i₁ ≤?ᵢ i₂ ⌋)
-  tbvalLR : ∀ {s a₁ a₂ r₁ r₂}
+  tbvalLR : ∀{s a₁ a₂ r₁ r₂}
          → taval a₁ s (Rv r₁)
          → taval a₂ s (Rv r₂)
          → tbval (Less a₁ a₂) s (r₁ ≤?ᵣ r₂)
@@ -167,7 +167,7 @@ trans Ref b = b
 trans (Step x a) b = Step x (trans a b)       
 
 
-preservation-aval : ∀ {Γ a s τ v}
+preservation-aval : ∀{Γ a s τ v}
   → Γ ⊢ₐ a ∷ τ
   → Γ ⊢ₛ s
   → taval a s v
@@ -178,17 +178,17 @@ preservation-aval taexpV b (tavalV {x}) = b x
 preservation-aval (taexpP a a₁) b (tavalSI c c₁) = preservation-aval a₁ b c₁
 preservation-aval (taexpP a a₁) b (tavalSR c c₁) = preservation-aval a₁ b c₁
 
-extract-ity : ∀ (v)
+extract-ity : ∀ v
   → type v ≡ Ity
   → ∃[ i ] (v ≡ Iv i)
 extract-ity (Iv x) r = x , refl 
 
-extract-rty : ∀ (v)
+extract-rty : ∀ v
   → type v ≡ Rty
   → ∃[ i ] (v ≡ Rv i)
 extract-rty (Rv x) r = x , refl
 
-progress-aval : ∀ {Γ a s τ}
+progress-aval : ∀{Γ a s τ}
   → Γ ⊢ₐ a ∷ τ
   → Γ ⊢ₛ s
   → ∃[ v ] (taval a s v)
@@ -205,7 +205,7 @@ progress-aval {τ = Rty} (taexpP a₁ a₂) b with progress-aval a₁ b | progre
 ... | v1 , e1 | v2 , e2 rewrite e1 | e2 = -, tavalSR r m
 
 
-progress-bval : ∀ {Γ b s}
+progress-bval : ∀{Γ b s}
   → Γ ⊢₆ b
   → Γ ⊢ₛ s
   → ∃[ v ] (tbval b s v)
@@ -223,7 +223,7 @@ progress-bval (tbexpL {τ = Rty} a₁ a₂) b with progress-aval a₁ b | progre
 ... | v1 , e1 | v2 , e2 rewrite e1 | e2 = -, tbvalLR r m
 
 
-preservation-com : ∀ {Γ c s c′ s′}
+preservation-com : ∀{Γ c s c′ s′}
   → ⦅ c , s ⦆→⦅ c′ , s′ ⦆
   → Γ ⊢ c
   → Γ ⊢ c′
@@ -235,7 +235,7 @@ preservation-com (IfFalse x) (TIf x₁ b b₁) = b₁
 preservation-com While (TWhile x b) = TIf x (TSeq b (TWhile x b)) TSkip
 
 
-preservation-state : ∀ {Γ c s c′ s′}
+preservation-state : ∀{Γ c s c′ s′}
   → ⦅ c , s ⦆→⦅ c′ , s′ ⦆
   → Γ ⊢ c
   → Γ ⊢ₛ s
@@ -251,7 +251,7 @@ preservation-state (IfFalse x) (TIf x₁ c c₁) r = r
 preservation-state While (TWhile x c) r = r
 
 
-preservation : ∀ {Γ c s c′ s′}
+preservation : ∀{Γ c s c′ s′}
   → Γ ⊢  c
   → Γ ⊢ₛ s
   → ⦅ c , s ⦆→⦅ c′ , s′ ⦆
@@ -259,7 +259,7 @@ preservation : ∀ {Γ c s c′ s′}
 preservation a b c = preservation-com c a , preservation-state c a b
 
 
-either-skip : ∀ (c)
+either-skip : ∀ c
             → c ≡ SKIP ⊎ ¬ c ≡ SKIP
 either-skip SKIP = inj₁ refl
 either-skip (x ::= x₁) = inj₂ (λ ())
@@ -268,7 +268,7 @@ either-skip (IF x THEN c ELSE c₁) = inj₂ (λ ())
 either-skip (WHILE x DO c) = inj₂ (λ ())
 
 
-progress : ∀ {Γ c s}
+progress : ∀{Γ c s}
   → Γ ⊢  c
   → Γ ⊢ₛ s
   → ¬ c ≡ SKIP
@@ -285,7 +285,7 @@ progress (TIf x a a₁) b _ with progress-bval x b
 progress (TWhile x a) b _ = -, -, While
 
 
-type-soundness : ∀ {c s c′ s′ Γ}
+type-soundness : ∀{c s c′ s′ Γ}
   → ⦅ c , s ⦆→*⦅ c′ , s′ ⦆
   → Γ ⊢  c
   → Γ ⊢ₛ s

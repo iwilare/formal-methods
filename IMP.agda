@@ -32,7 +32,7 @@ aval (N c) s = c
 aval (V v) s = s v
 aval (Plus a b) s = aval a s + aval b s
 
-substitution : ∀ (a) {X a′ s}
+substitution : ∀ a {X a′ s}
   → aval (a [ a′ / X ]) s ≡ aval a (s [ X ::= aval a′ s ])
 substitution (N x) = refl
 substitution (V Y) {X} with Y ≟ X
@@ -42,7 +42,7 @@ substitution (Plus a b) {X}{a′}{s}
   rewrite substitution a {X}{a′}{s}
         | substitution b {X}{a′}{s} = refl
 
-substitution-equiv : ∀ {a a₁ a₂ X s}
+substitution-equiv : ∀{a a₁ a₂ X s}
   → aval a₁ s             ≡ aval a₂ s
   → aval (a [ a₁ / X ]) s ≡ aval (a [ a₂ / X ]) s
 substitution-equiv {a}{a₁}{a₂}{X}{s} hyp

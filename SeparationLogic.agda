@@ -28,19 +28,19 @@ store = vname → val
 
 state = store × heap
 
-assn : ∀ {l} → Set (suc l)
+assn : ∀{l} → Set (suc l)
 assn {a} = store → heap → Set a
 
 emp : assn
-emp _ h = ∀ (a) → h a ≡ nothing
+emp _ h = ∀ a → h a ≡ nothing
 
 _⊢>_ : IMP.aexp → IMP.aexp → assn
 _⊢>_ a a′ s h = h (aval a s) ≡ just (aval a′ s)
               × ∀ (a″) → ¬(a″ ≡ aval a s) → h a″ ≡ nothing
 
 _⊆_ : heap → heap → Set
-h₀ ⊆ h = ∀ (a) → (h a ≡ nothing → h₀ a ≡ nothing)
-               × (∀ {o} → h₀ a ≡ just o → h₀ a ≡ h a)
+h₀ ⊆ h = ∀ a → (h a ≡ nothing → h₀ a ≡ nothing)
+             × (∀{o} → h₀ a ≡ just o → h₀ a ≡ h a)
 
 heap-union : heap → heap → heap → addr → Set
 heap-union h h₁ h₂ a with h a
@@ -49,9 +49,9 @@ heap-union h h₁ h₂ a with h a
 ... | nothing = h₁ a ≡ nothing × h₂ a ≡ nothing
 
 _∼_⊥_ :  heap → heap → heap → Set
-h ∼ h₁ ⊥ h₂ = ∀ (a) → heap-union h h₁ h₂ a
+h ∼ h₁ ⊥ h₂ = ∀ a → heap-union h h₁ h₂ a
 
-union-subset : ∀ (h) {h₁ h₂}
+union-subset : ∀ h {h₁ h₂}
   → h ∼ h₁ ⊥ h₂
   → h₁ ⊆ h
 union-subset h x a with h a  | x a
@@ -59,7 +59,7 @@ union-subset h x a | just x₁ | inj₁ (fst₁ ,, snd₁) = (λ ()) ,, (λ {x} 
 union-subset h x a | just x₁ | inj₂ (fst₁ ,, snd₁) rewrite fst₁ = (λ _ → refl) ,, (λ {x} ())
 union-subset h x a | nothing | fst₁ ,, snd₁ = (λ x → fst₁) ,, (λ {x} x₁ → fst₁)
 
-_*_ : ∀ {l} → assn {l} → assn {l} → assn {l}
+_*_ : ∀{l} → assn {l} → assn {l} → assn {l}
 _*_ P Q s h = ∃[ h₁ ] ∃[ h₂ ] ((h ∼ h₁ ⊥ h₂)
                               × P s h₁
                               × Q s h₂)
@@ -92,27 +92,27 @@ data com : Set where
   dispose_ : aexp → com
 
 data ⊢[_]_[_] {l} : assn {l} → com → assn {l} → Set (suc l) where
-  Skip : ∀ {P}
+  Skip : ∀{P}
     → ⊢[ P ] SKIP [ P ]
-  Loc : ∀ {Q a x}
+  Loc : ∀{Q a x}
     → ⊢[ (λ s → Q (s [ x ::= aval a s ])) ] (x ::= a) [ Q ]
-  Comp : ∀ {P Q R c₁ c₂}
+  Comp : ∀{P Q R c₁ c₂}
     → ⊢[ P ] c₁ [ Q ]
     → ⊢[ Q ] c₂ [ R ]
     → ⊢[ P ] c₁ :: c₂ [ R ]
-  If : ∀ {P b c₁ Q c₂}
+  If : ∀{P b c₁ Q c₂}
     → ⊢[ (λ s h → P s h × bval b s ≡ true)  ] c₁ [ Q ]
     → ⊢[ (λ s h → P s h × bval b s ≡ false) ] c₂ [ Q ]
     → ⊢[ P ] (IF b THEN c₁ ELSE c₂) [ Q ]
-  While : ∀ {P b c}
+  While : ∀{P b c}
     → ⊢[ (λ s h → P s h × bval b s ≡ true) ] c [ P ]
     → ⊢[ P ] (WHILE b DO c) [ (λ s h → P s h × bval b s ≡ false) ]
-  Conseq : ∀ {P Q P′ Q′ : assn} {c}
+  Conseq : ∀{P Q P′ Q′ : assn} {c}
     → (∀ s h → P′ s h → P s h)
     → ⊢[ P  ] c [ Q  ]
     → (∀ s h → Q s h → Q′ s h)
     → ⊢[ P′ ] c [ Q′ ]
-  Frame : ∀ {A B R c}
+  Frame : ∀{A B R c}
     → ⊢[ A     ] c [ B     ]
     → ⊢[ A * R ] c [ B * R ]
 
@@ -165,8 +165,8 @@ data _⇒_ : config → config → Set where
       → ⦅ dispose a , s , h ⦆ ⇒ abort
 
 data _⇒*_ : config → config → Set where
-  _∎ : ∀(c) → c ⇒* c
-  _→⟨_⟩_ : ∀(c) {c′ c″}
+  _∎ : ∀ c → c ⇒* c
+  _→⟨_⟩_ : ∀ c {c′ c″}
          → c  ⇒  c′
          → c′ ⇒* c″
          → c  ⇒* c″ 
@@ -183,21 +183,21 @@ lemma1 sub (LookupFail {a}{s} r) = LookupFail (fst (sub (aval a s)) r)
 lemma1 sub (WriteFail {a}{s} r) = WriteFail {a} (fst (sub (aval a s)) r)
 lemma1 sub (DisposeFail {a}{s} r) = DisposeFail (fst (sub (aval a s)) r)
 
-subset-update : ∀ (l) {h h₀ v}
+subset-update : ∀ l {h h₀ v}
   →  h₀ ⊆ h
   → (h₀ [ l ::=ₕ v ]) ⊆ (h [ l ::=ₕ v ])
 subset-update l b Y with Y ≟ l
 ... | yes p = (λ x → x) ,, λ {o} _ → refl
 ... | no ¬p = b Y
 
-subset-delete : ∀ (v) {h h₀}
+subset-delete : ∀ v {h h₀}
   →  h₀ ⊆ h
   → (h₀ /[ v ]) ⊆ (h /[ v ])
 subset-delete l b Y with Y ≟ l
 ... | yes p = (λ x → refl) ,, (λ {x} x₁ → refl)
 ... | no ¬p = b Y
 
-lemma2 : ∀(h₀) {h c c′ s s′ h′}
+lemma2 : ∀ h₀ {h c c′ s s′ h′}
        → h₀ ⊆ h
        → ⦅ c , s , h  ⦆ ⇒ ⦅ c′ , s′ , h′ ⦆
        → ⦅ c , s , h₀ ⦆ ⇒ abort
@@ -332,24 +332,24 @@ frame2 {h₀ = h₀} s t (_→⟨_⟩_ .(⦅ _ , _ , _ ⦆) {⦅ _ , _ , _ ⦆} 
 frame2 s t (_→⟨_⟩_ .(⦅ _ , _ , _ ⦆) {abort} x (.abort →⟨ () ⟩ r))
 
 ⊨[_]_[_] : assn → com → assn → Set
-⊨[ A ] c [ B ] = ∀ {s h}
+⊨[ A ] c [ B ] = ∀{s h}
   → A s h
   → Safe ⦅ c , s , h ⦆
-  × (∀ {s′ h′} → ⦅ c , s , h ⦆ ⇒* ⦅ SKIP , s′ , h′ ⦆ → B s′ h′)
+  × (∀{s′ h′} → ⦅ c , s , h ⦆ ⇒* ⦅ SKIP , s′ , h′ ⦆ → B s′ h′)
 
 NotInfluenced : assn → com → Set
-NotInfluenced R c = ∀ {s s′ z h₀ h′₀ hᵣ}
+NotInfluenced R c = ∀{s s′ z h₀ h′₀ hᵣ}
   → z ∼ h′₀ ⊥ hᵣ
   → ⦅ c , s , h₀ ⦆ ⇒* ⦅ SKIP , s′ , h′₀ ⦆ 
   → R s hᵣ → R s′ hᵣ
 
-frame-soundness : ∀ {A B R : assn} {c}
+frame-soundness : ∀{A B R : assn} {c}
   → NotInfluenced R c
   → ⊨[ A     ] c [ B     ]
   → ⊨[ A * R ] c [ B * R ]
 frame-soundness {A}{B}{R}{c} Inf H {s}{h} (h₀ ,, h₁ ,, ⊥ ,, A₀ ,, R₁) with H A₀
 ... | safe ,, conv = frame1 ⊥ safe ,, frame2-ex
-   where frame2-ex : ∀ {s′ h′}
+   where frame2-ex : ∀{s′ h′}
                    → ⦅ c , s , h ⦆ ⇒* ⦅ SKIP , s′ , h′ ⦆
                    → ∃[ h₁ ] ∃[ h₂ ] ( (h′ ∼ h₁ ⊥ h₂)
                                      × B s′ h₁

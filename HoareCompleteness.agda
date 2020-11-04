@@ -8,20 +8,20 @@ open import IMP
 open import OperationalSemantics
 open import Hoare
 
-wp : ∀ {l} → com → assn {l} → assn {l}
+wp : ∀{l} → com → assn {l} → assn {l}
 wp c Q s = ∀ t → ⦅ c , s ⦆⇒ t → Q t
 
-fatto : ∀ {P Q : assn} {c}
+fatto : ∀{P Q : assn} {c}
       → ⊨[ P ] c [ Q ]
       → (∀ s → P s → wp c Q s)
 fatto = λ z s z₁ t → z z₁
 
-fatto-converse : ∀ {P Q : assn} {c}
+fatto-converse : ∀{P Q : assn} {c}
       → (∀ s → P s → wp c Q s)
       → ⊨[ P ] c [ Q ]
 fatto-converse = (λ z {s} {t} z₁ → z s z₁ t)
 
-wp-hoare : ∀ {l} {Q : assn {l}} (c)
+wp-hoare : ∀ c {l} {Q : assn {l}}
   → ⊢[ wp c Q ] c [ Q ]
 wp-hoare SKIP = Conseq (λ s z → z s Skip) Skip (λ s z → z)
 wp-hoare (x ::= a) = Conseq (λ s wpe → wpe (s [ x ::= aval a s ]) Loc) Loc (λ s r → r)
@@ -35,7 +35,7 @@ wp-hoare (WHILE b DO c) =
                         (λ s z → z)))
          (λ s z → proj₁ z s (WhileFalse (proj₂ z)))
 
-completeness : ∀ {P Q : assn} (c)
+completeness : ∀ c {P Q : assn}
   → ⊨[ P ] c [ Q ]
   → ⊢[ P ] c [ Q ]
 completeness c cc = Conseq (fatto cc) (wp-hoare c) (λ r x → x)

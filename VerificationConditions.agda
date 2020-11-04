@@ -22,14 +22,14 @@ data acom {l} : Set (suc l) where
   IF_THEN_ELSE_ : bexp → acom {l} → acom {l} → acom
   WHILE[_]_DO_ : assn {l} → bexp → acom {l} → acom
 
-strip : ∀ {l} → acom {l} → com
+strip : ∀{l} → acom {l} → com
 strip SKIP = SKIP
 strip (x ::= a) = x ::= a
 strip (c₁ :: c₂) = strip c₁ :: strip c₂
 strip (IF b THEN c₁ ELSE c₂) = IF b THEN strip c₁ ELSE strip c₂
 strip (WHILE[ I ] b DO c) = WHILE b DO strip c
 
-pre : ∀ {l} → acom {l} → assn → assn
+pre : ∀{l} → acom {l} → assn → assn
 pre SKIP Q = Q
 pre (x ::= a) Q s = Q (s [ x ::= aval a s ])
 pre (c₁ :: c₂) Q = pre c₁ (pre c₂ Q)
@@ -38,7 +38,7 @@ pre (IF b THEN c₁ ELSE c₂) Q s with bval b s
 ... | false = pre c₂ Q s
 pre (WHILE[ I ] b DO c) Q = I
 
-vc : ∀ {l} → acom {l} → assn → Set l
+vc : ∀{l} → acom {l} → assn → Set l
 vc SKIP Q = True
 vc (x ::= x₁) Q = True
 vc (c₁ :: c₂) Q = vc c₁ (pre c₂ Q) × vc c₂ Q
@@ -48,19 +48,19 @@ vc (WHILE[ I ] b DO c) Q =
    × (∀ s → I s × bval b s ≡ false → Q s)
    × vc c I
 
-extract-if-pre₁ : ∀ {l} {Q : assn {l}} {c₁ c₂ s} (b)
+extract-if-pre₁ : ∀{l} {Q : assn {l}} {c₁ c₂ s} b
   → pre (IF b THEN c₁ ELSE c₂) Q s
   × bval b s ≡ true
   → pre c₁ Q s
 extract-if-pre₁ b (x , y) rewrite y = x
 
-extract-if-pre₂ : ∀ {l} {Q : assn {l}} {c₁ c₂ s} (b)
+extract-if-pre₂ : ∀{l} {Q : assn {l}} {c₁ c₂ s} b
   → pre (IF b THEN c₁ ELSE c₂) Q s
   × bval b s ≡ false
   → pre c₂ Q s
 extract-if-pre₂ b (x , y) rewrite y = x
 
-vc-correctness : ∀ {l} {P Q : assn} (c)
+vc-correctness : ∀{l} {P Q : assn} c
   → vc {l} c Q
   → (∀ s → P s → pre c Q s)
   → ⊢[ P ] strip c [ Q ]
@@ -75,7 +75,7 @@ vc-correctness {l}{P}{Q} (IF b THEN c₁ ELSE c₂) (fst , snd) i =
 vc-correctness (WHILE[ I ] b DO c) (fst , fst₁ , snd) i =
     Conseq i (While (vc-correctness c snd fst)) fst₁
    
-pre-mono : ∀ {l} {P P′ : assn {l}} {s′} (c)
+pre-mono : ∀{l} {P P′ : assn {l}} {s′} c
   → (∀ s → P s → P′ s)
   → pre c P s′ → pre c P′ s′
 pre-mono {s′ = s′} SKIP x x₁ = x s′ x₁
@@ -86,7 +86,7 @@ pre-mono {s′ = s′} (IF x₂ THEN c₁ ELSE c₂) x x₁ with bval x₂ s′
 ... | false = pre-mono c₂ x x₁ 
 pre-mono (WHILE[ x₂ ] x₃ DO c) x x₁ = x₁
 
-vc-mono : ∀ {l} {P P′ : assn {l}} (c)
+vc-mono : ∀{l} {P P′ : assn {l}} c
   → (∀ s → P s → P′ s)
   → vc c P → vc c P′
 vc-mono SKIP _ _ = ⊤
@@ -99,7 +99,7 @@ either : ∀ c → c ≡ true ⊎ c ≡ false
 either true  = inj₁ refl
 either false = inj₂ refl
 
-construct-if-pre : ∀ {l} {P Q : assn {l}} {ac₁ ac₂} (b s)
+construct-if-pre : ∀{l} {P Q : assn {l}} {ac₁ ac₂} b s
    → (bval b s ≡ true  → pre ac₁ Q s)
    → (bval b s ≡ false → pre ac₂ Q s)
    → pre (IF b THEN ac₁ ELSE ac₂) Q s
@@ -107,7 +107,7 @@ construct-if-pre b s f g with bval b s
 ... | true = f refl
 ... | false = g refl
 
-vc-completeness : ∀ {l} {P Q : assn {l}} (c)
+vc-completeness : ∀{l} {P Q : assn {l}} c
   → ⊢[ P ] c [ Q ]
   → ∃[ c̃ ] ( c ≡ strip c̃
            × vc c̃ Q

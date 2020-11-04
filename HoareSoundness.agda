@@ -4,7 +4,7 @@ open import IMP
 open import OperationalSemantics
 open import Hoare
 
-soundness : ∀ {P Q : assn} {c}
+soundness : ∀{P Q : assn} {c}
           → ⊢[ P ] c [ Q ]
           → ⊨[ P ] c [ Q ]
 soundness Skip p Skip = p

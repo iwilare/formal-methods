@@ -14,7 +14,8 @@ open import IMP
 level = ℕ
 
 sec : vname → level
-sec x = sec x -- Trucco per non espandere la definizione
+-- Trick to avoid the automatic expansion of the definition in error messages
+sec x = sec x
 
 secₐ : aexp → level
 secₐ (N n) = 0
@@ -28,12 +29,12 @@ sec₆ (And b₁ b₂) = sec₆ b₁ ⊔ sec₆ b₂
 sec₆ (Less a b) = secₐ a ⊔ secₐ b 
 
 _≡_⦅≤_⦆ : state → state → level → Set
-s₁ ≡ s₂ ⦅≤ l ⦆ = ∀ (x) → sec x ≤ l → s₁ x ≡ s₂ x
+s₁ ≡ s₂ ⦅≤ l ⦆ = ∀ x → sec x ≤ l → s₁ x ≡ s₂ x
 
 _≡_⦅<_⦆ : state → state → level → Set
-s₁ ≡ s₂ ⦅< l ⦆ = ∀ (x) → sec x < l → s₁ x ≡ s₂ x
+s₁ ≡ s₂ ⦅< l ⦆ = ∀ x → sec x < l → s₁ x ≡ s₂ x
 
-non-interference-aexp : ∀ (a) {s₁ s₂ l}
+non-interference-aexp : ∀ a {s₁ s₂ l}
   → s₁ ≡ s₂ ⦅≤ l ⦆
   → secₐ a ≤ l
   → aval a s₁ ≡ aval a s₂
@@ -43,39 +44,39 @@ non-interference-aexp (Plus a b) r e =
   cong₂ (_+_) (non-interference-aexp a r (m⊔n≤o⇒m≤o _ _ e))
               (non-interference-aexp b r (m⊔n≤o⇒n≤o _ _ e))
 
-non-interference-bexp : ∀ (a) {s₁ s₂ l}
+non-interference-bexp : ∀ a {s₁ s₂ l}
   → s₁ ≡ s₂ ⦅≤ l ⦆
   → sec₆ a ≤ l
   → bval a s₁ ≡ bval a s₂
 non-interference-bexp (Bc x) r e = refl
-non-interference-bexp (Not a) r e = cong not (non-interference-bexp (a) r e)
+non-interference-bexp (Not a) r e = cong not (non-interference-bexp a r e)
 non-interference-bexp (And a b) r e = 
-  cong₂ (_∧_) (non-interference-bexp (a) r (m⊔n≤o⇒m≤o _ _ e))
-              (non-interference-bexp (b) r (m⊔n≤o⇒n≤o _ _ e)) 
+  cong₂ (_∧_) (non-interference-bexp a r (m⊔n≤o⇒m≤o _ _ e))
+              (non-interference-bexp b r (m⊔n≤o⇒n≤o _ _ e)) 
 non-interference-bexp (Less a b) r e = 
-  cong₂ (_≤?_) (non-interference-aexp (a) r (m⊔n≤o⇒m≤o _ _ e))
-               (non-interference-aexp (b) r (m⊔n≤o⇒n≤o _ _ e)) 
+  cong₂ (_≤?_) (non-interference-aexp a r (m⊔n≤o⇒m≤o _ _ e))
+               (non-interference-aexp b r (m⊔n≤o⇒n≤o _ _ e)) 
 
 data _⊢_ : level → com → Set where
-  SecSkip : ∀ {l}
+  SecSkip : ∀{l}
      → l ⊢ SKIP
-  SecLoc : ∀ {l a x}
+  SecLoc : ∀{l a x}
      → secₐ a ≤ sec x     
      → l ≤ sec x
      → l ⊢ (x ::= a)
-  SecSeq : ∀ {l c₁ c₂}
+  SecSeq : ∀{l c₁ c₂}
      → l ⊢ c₁
      → l ⊢ c₂
      → l ⊢ (c₁ :: c₂)
-  SecIf : ∀ {b l c₁ c₂}
+  SecIf : ∀{b l c₁ c₂}
      → (l ⊔ sec₆ b) ⊢ c₁
      → (l ⊔ sec₆ b) ⊢ c₂
      → l ⊢ (IF b THEN c₁ ELSE c₂)
-  SecWhile : ∀ {b l c}
+  SecWhile : ∀{b l c}
      → (l ⊔ sec₆ b) ⊢ c
      → l ⊢ (WHILE b DO c)
 
-anti-monotonicity : ∀ {l l′ c}
+anti-monotonicity : ∀{l l′ c}
   → l ⊢ c
   → l′ ≤ l
   → l′ ⊢ c
@@ -111,7 +112,7 @@ data ⦅_,_⦆⇒_ : com → state → state → Set where
          → ⦅ WHILE b DO c , s₂ ⦆⇒ s₃
          → ⦅ WHILE b DO c , s₁ ⦆⇒ s₃
 
-confinement : ∀ {c s t l}
+confinement : ∀{c s t l}
   → ⦅ c , s ⦆⇒ t
   → l ⊢ c
   → s ≡ t ⦅< l ⦆
@@ -134,28 +135,28 @@ true≢false : ¬ (true ≡ false)
 true≢false = λ ()
 
 
-reversal₁ : ∀ {b c s₁ s₃}
+reversal₁ : ∀{b c s₁ s₃}
   → ⦅ WHILE b DO c , s₁ ⦆⇒ s₃
   → bval b s₁ ≡ true
   → ∃[ s₂ ] ( ⦅ c , s₁ ⦆⇒ s₂ × ⦅ WHILE b DO c , s₂ ⦆⇒ s₃)
 reversal₁ (WhileFalse x) v = contradiction (trans (sym v) x) true≢false
 reversal₁ (WhileTrue x e e₁) v = -, e , e₁
 
-reversal₂ : ∀ {b c s₁ s₃}
+reversal₂ : ∀{b c s₁ s₃}
   → ⦅ WHILE b DO c , s₁ ⦆⇒ s₃
   → bval b s₁ ≡ false
   → s₁ ≡ s₃
 reversal₂ (WhileFalse x) v = refl
 reversal₂ (WhileTrue x r r₁) v = contradiction (trans (sym x) v) true≢false
 
-level-cong : ∀ {l l′ c} → l ≡ l′ → l ⊢ c → l′ ⊢ c
+level-cong : ∀{l l′ c} → l ≡ l′ → l ⊢ c → l′ ⊢ c
 level-cong refl x = x
 
-≤⇒<suc : ∀ {a b} → a ≤ b → a < suc b
+≤⇒<suc : ∀{a b} → a ≤ b → a < suc b
 ≤⇒<suc z≤n = s≤s z≤n
 ≤⇒<suc (s≤s r) = s≤s (≤⇒<suc r)
 
-non-interference : ∀ {c s s′ t t′ l}
+non-interference : ∀{c s s′ t t′ l}
   → ⦅ c , s ⦆⇒ s′
   → ⦅ c , t ⦆⇒ t′
   → 0 ⊢ c
