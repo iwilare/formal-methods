@@ -2,7 +2,7 @@ open import Data.Nat      using (ℕ; suc; zero; _<_; _≤_; z≤n; s≤s; _+_; 
 open import Data.Bool     using (Bool; true; false; not; _∧_)
 open import Data.Sum      using (inj₁; inj₂; _⊎_; [_,_])
 open import Data.Product  using (_×_; _,_; -,_; _-,-_; ∃; ∃-syntax; proj₂)
-open import Data.String   using (String; _≟_)
+open import Data.String   using (String; _≟_; length)
 open import Relation.Nullary           using (¬_; yes; no)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 open import Relation.Nullary.Negation using (contradiction)
@@ -14,8 +14,9 @@ open import IMP
 level = ℕ
 
 sec : vname → level
--- Trick to avoid the automatic expansion of the definition in error messages
-sec x = sec x
+-- We can also temporarily use "sec x" to avoid the
+-- automatic expansion of the definition in error messages
+sec x = length x
 
 secₐ : aexp → level
 secₐ (N n) = 0
@@ -25,8 +26,8 @@ secₐ (Plus a b) = secₐ a ⊔ secₐ b
 sec₆ : bexp → level
 sec₆ (Bc x) = 0
 sec₆ (Not b) = sec₆ b
-sec₆ (And b₁ b₂) = sec₆ b₁ ⊔ sec₆ b₂ 
-sec₆ (Less a b) = secₐ a ⊔ secₐ b 
+sec₆ (And b₁ b₂) = sec₆ b₁ ⊔ sec₆ b₂
+sec₆ (Less a b) = secₐ a ⊔ secₐ b
 
 _≡_⦅≤_⦆ : state → state → level → Set
 s₁ ≡ s₂ ⦅≤ l ⦆ = ∀ x → sec x ≤ l → s₁ x ≡ s₂ x
@@ -40,7 +41,7 @@ non-interference-aexp : ∀ a {s₁ s₂ l}
   → aval a s₁ ≡ aval a s₂
 non-interference-aexp (N x) r e = refl
 non-interference-aexp (V x) r e = r x e
-non-interference-aexp (Plus a b) r e = 
+non-interference-aexp (Plus a b) r e =
   cong₂ (_+_) (non-interference-aexp a r (m⊔n≤o⇒m≤o _ _ e))
               (non-interference-aexp b r (m⊔n≤o⇒n≤o _ _ e))
 
@@ -50,18 +51,18 @@ non-interference-bexp : ∀ a {s₁ s₂ l}
   → bval a s₁ ≡ bval a s₂
 non-interference-bexp (Bc x) r e = refl
 non-interference-bexp (Not a) r e = cong not (non-interference-bexp a r e)
-non-interference-bexp (And a b) r e = 
+non-interference-bexp (And a b) r e =
   cong₂ (_∧_) (non-interference-bexp a r (m⊔n≤o⇒m≤o _ _ e))
-              (non-interference-bexp b r (m⊔n≤o⇒n≤o _ _ e)) 
-non-interference-bexp (Less a b) r e = 
+              (non-interference-bexp b r (m⊔n≤o⇒n≤o _ _ e))
+non-interference-bexp (Less a b) r e =
   cong₂ (_≤?_) (non-interference-aexp a r (m⊔n≤o⇒m≤o _ _ e))
-               (non-interference-aexp b r (m⊔n≤o⇒n≤o _ _ e)) 
+               (non-interference-aexp b r (m⊔n≤o⇒n≤o _ _ e))
 
 data _⊢_ : level → com → Set where
   SecSkip : ∀{l}
      → l ⊢ SKIP
   SecLoc : ∀{l a x}
-     → secₐ a ≤ sec x     
+     → secₐ a ≤ sec x
      → l ≤ sec x
      → l ⊢ (x ::= a)
   SecSeq : ∀{l c₁ c₂}
@@ -118,17 +119,17 @@ confinement : ∀{c s t l}
   → s ≡ t ⦅< l ⦆
 confinement Skip SecSkip x₂ x₃ = refl
 confinement (Loc {x = x₂}) (SecLoc x x₁) e r with e ≟ x₂
-... | yes q rewrite q = contradiction x₁ (<⇒≱ r)
+... | yes refl = contradiction x₁ (<⇒≱ r)
 ... | no  _ = refl
 confinement (Seq x x₄) (SecSeq x₁ x₅) x₂ x₃ =
   trans (confinement x x₁ x₂ x₃)
-        (confinement x₄ x₅ x₂ x₃) 
+        (confinement x₄ x₅ x₂ x₃)
 confinement (IfTrue x x₄) (SecIf x₁ x₅) x₂ x₃ = confinement x₄ x₁ x₂ (m<n⇒m<n⊔o _ x₃)
 confinement (IfFalse x x₄) (SecIf x₁ x₅) x₂ x₃ = confinement x₄ x₅ x₂ (m<n⇒m<n⊔o _ x₃)
 confinement (WhileFalse x) (SecWhile x₁) x₂ x₃ = refl
-confinement {l = l} (WhileTrue x x₄ x₅) (SecWhile x₁) x₂ x₃ = 
+confinement {l = l} (WhileTrue x x₄ x₅) (SecWhile x₁) x₂ x₃ =
    trans (confinement x₄ (anti-monotonicity x₁ (m≤m⊔n _ _)) x₂ x₃)
-         (confinement x₅ (SecWhile x₁) x₂ x₃) 
+         (confinement x₅ (SecWhile x₁) x₂ x₃)
 
 
 true≢false : ¬ (true ≡ false)
@@ -164,11 +165,11 @@ non-interference : ∀{c s s′ t t′ l}
   → s′ ≡ t′ ⦅≤ l ⦆
 non-interference Skip Skip z e = e
 non-interference (Loc {x = x₂} {a}) Loc (SecLoc x₃ z≤n) e x x₁ with x ≟ x₂
-... | yes _ = non-interference-aexp a e (≤-trans x₃ x₁)
-... | no  _ = e x x₁
-non-interference (Seq x cs) (Seq y ct) (SecSeq z z₁) e = 
+... | yes refl = non-interference-aexp a e (≤-trans x₃ x₁)
+... | no _ = e x x₁
+non-interference (Seq x cs) (Seq y ct) (SecSeq z z₁) e =
   non-interference cs ct z₁ (non-interference x y z e)
-non-interference {l = l} (IfTrue {b = b} x cs) (IfTrue x₁ red) (SecIf w w₁) e r r₁ = 
+non-interference {l = l} (IfTrue {b = b} x cs) (IfTrue x₁ red) (SecIf w w₁) e r r₁ =
   non-interference cs red (anti-monotonicity w z≤n) e r r₁
 non-interference {l = l} (IfTrue {b = b} x cs) (IfFalse x₁ red) (SecIf w w₁) e r r₁ =
   [ (λ secb≤l →
@@ -180,7 +181,7 @@ non-interference {l = l} (IfTrue {b = b} x cs) (IfFalse x₁ red) (SecIf w w₁)
                    (trans (e r r₁)
                           (oo₂ r (<-transʳ r₁ l<secb))))
   ]  (≤-<-connex (sec₆ b) l)
-non-interference {l = l} (IfFalse x₁ red) (IfTrue {b = b} x cs) (SecIf w w₁) e r r₁ = 
+non-interference {l = l} (IfFalse x₁ red) (IfTrue {b = b} x cs) (SecIf w w₁) e r r₁ =
   [ (λ secb≤l →
         let wr = non-interference-bexp b e secb≤l
          in contradiction (trans (sym x) (trans (sym wr) x₁)) true≢false)
@@ -190,7 +191,7 @@ non-interference {l = l} (IfFalse x₁ red) (IfTrue {b = b} x cs) (SecIf w w₁)
                    (trans (e r r₁)
                           (oo₁ r (<-transʳ r₁ l<secb))))
   ]  (≤-<-connex (sec₆ b) l)
-non-interference (IfFalse x₁ red) (IfFalse x cs) (SecIf x₇ x₈) = 
+non-interference (IfFalse x₁ red) (IfFalse x cs) (SecIf x₇ x₈) =
   non-interference red cs (anti-monotonicity x₈ z≤n)
 non-interference (WhileFalse x) (WhileFalse x₁) (SecWhile z) e = e
 non-interference {l = l} (WhileFalse {b = b} r) (WhileTrue c ct ct₁) (SecWhile z) e x x₁ =
@@ -213,40 +214,5 @@ non-interference {l = l} (WhileTrue c ct ct₁) (WhileFalse {b = b} r) (SecWhile
   ]  (≤-<-connex (sec₆ b) l)
 non-interference {l = l} (WhileTrue {b = b} r cs cs₁) (WhileTrue c ct ct₁) (SecWhile z) e =
   let h₁ = non-interference cs ct (anti-monotonicity z z≤n) e
-      h₂ = non-interference cs₁ ct₁ (SecWhile z) h₁  
+      h₂ = non-interference cs₁ ct₁ (SecWhile z) h₁
    in h₂
-
-{-
-Versione con il subsplitting su bval:
-
-non-interference {l = l} (IfTrue {b = b} x cs) red (SecIf w w₁) e r r₁ rewrite max-idᵣ (sec₆ b) =
- [ (λ secb≤l → let wr = non-interference-bexp b e secb≤l
-                   m = sym (trans (sym x) wr)
-                   y = non-interference cs (reversal₁ red m) (anti-monotonicity w z≤n) e
-                   in y r r₁)
- , (λ l<secb → [ (λ { be → let oo₁ = confinement cs w
-                               oo₂ = confinement be w
-                            in trans (sym ((oo₁ r (<-transˡ (s≤s r₁) l<secb))))
-                                            (trans (e r r₁) (oo₂ r ((<-transˡ (s≤s r₁) l<secb)))) })
-               , (λ { be → let oo₁ = confinement cs w
-                               oo₂ = confinement be w₁
-                            in trans (sym ((oo₁ r (<-transˡ (s≤s r₁) l<secb))))
-                              (trans (e r r₁) (oo₂ r ((<-transˡ (s≤s r₁) l<secb)))) })
-               ] (if-reduce-either red))
- ] (≤-<-connex (sec₆ b) l)
-non-interference {l = l} (IfFalse {b = b} x cs) red (SecIf w w₁) e r r₁ =
- [ (λ secb≤l → let wr = non-interference-bexp b e secb≤l
-                   m = sym (trans (sym x) wr)
-                   y = non-interference cs (reversal₂ red m) (anti-monotonicity w₁ z≤n) e
-                in y r r₁)
- , (λ l<secb →  [ (λ be → let oo₁ = confinement cs w₁
-                              oo₂ = confinement be w
-                           in trans (sym ((oo₁ r (<-transˡ (s≤s r₁) l<secb))))
-                             (trans (e r r₁) (oo₂ r ((<-transˡ (s≤s r₁) l<secb)))))
-                , (λ be → let oo₁ = confinement cs w₁
-                              oo₂ = confinement be w₁
-                           in trans (sym ((oo₁ r (<-transˡ (s≤s r₁) l<secb))))
-                             (trans (e r r₁) (oo₂ r ((<-transˡ (s≤s r₁) l<secb)))))
-                ] (if-reduce-either red))
- ] (≤-<-connex (sec₆ b) l)
--}
